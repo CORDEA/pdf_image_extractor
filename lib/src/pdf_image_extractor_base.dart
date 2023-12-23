@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
+import 'package:pdf_image_extractor/src/raw_pdf_image.dart';
 
 class PdfImageExtractor {
   PdfImageExtractor(this.file);
@@ -13,6 +14,31 @@ class PdfImageExtractor {
     _bytes = await file.readAsBytes();
     if (_isPdf()) {
       return [];
+    }
+    final lines = _bytes
+        .splitAfter((e) => e == 0x0a)
+        .map((e) => String.fromCharCodes(e))
+        .toList(growable: false);
+    final Map<RawPdfImageId, List<String>> objects = {};
+    RawPdfImageId? currentId;
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      if (line.endsWith('obj\n')) {
+        if (line.startsWith('end')) {
+          currentId = null;
+        } else {
+          final args = line.split(' ');
+          currentId = RawPdfImageId(
+            objectNumber: int.parse(args[0]),
+            generationNumber: int.parse(args[1]),
+          );
+        }
+        continue;
+      }
+      if (currentId == null) {
+        continue;
+      }
+      objects.putIfAbsent(currentId, () => []).add(line);
     }
     return [];
   }
