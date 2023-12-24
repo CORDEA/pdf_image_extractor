@@ -17,14 +17,14 @@ class PdfImageExtractor {
       return [];
     }
     final lines = _bytes
-        .splitAfter((e) => e == 0x0a)
+        .splitAfter((e) => e == 0x0a || e == 0x0d)
         .map((e) => String.fromCharCodes(e))
         .toList(growable: false);
     final Map<RawPdfImageId, List<String>> objects = {};
     RawPdfImageId? currentId;
     for (var i = 0; i < lines.length; i++) {
-      final line = lines[i];
-      if (line.endsWith('obj\n')) {
+      final line = lines[i].trim();
+      if (line.endsWith('obj')) {
         if (line.startsWith('end')) {
           currentId = null;
         } else {

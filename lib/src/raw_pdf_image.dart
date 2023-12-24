@@ -69,8 +69,7 @@ enum RawPdfImageColorSpace {
 }
 
 class Serializer {
-  bool canDeserialize(List<String> value) =>
-      value.any((e) => e.startsWith('/Subtype /Image'));
+  bool canDeserialize(List<String> value) => value.any((e) => e.contains('/Subtype /Image'));
 
   RawPdfImage deserialize(RawPdfImageId id, List<String> value) {
     late int width;
@@ -88,7 +87,7 @@ class Serializer {
         bytes.addAll(v.codeUnits);
         continue;
       }
-      final line = v.trimRight();
+      final line = v.trim();
       final args = line.split(' ');
       if (args.length > 1) {
         switch (args[0]) {
