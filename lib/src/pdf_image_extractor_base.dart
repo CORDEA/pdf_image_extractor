@@ -8,9 +8,10 @@ class PdfImageExtractor {
   PdfImageExtractor(this.file);
 
   final File file;
+  final _serializer = Serializer();
   late Uint8List _bytes;
 
-  Future<List<dynamic>> extract() async {
+  Future<List<RawPdfImage>> extract() async {
     _bytes = await file.readAsBytes();
     if (_isPdf()) {
       return [];
@@ -40,7 +41,12 @@ class PdfImageExtractor {
       }
       objects.putIfAbsent(currentId, () => []).add(line);
     }
-    return [];
+
+    objects.removeWhere((_, value) => !_serializer.canDeserialize(value));
+    return objects
+        .map((key, value) => MapEntry(key, _serializer.deserialize(key, value)))
+        .values
+        .toList(growable: false);
   }
 
   bool _isPdf() =>
