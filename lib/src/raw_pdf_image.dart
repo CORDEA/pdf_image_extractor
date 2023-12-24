@@ -83,12 +83,13 @@ class Serializer {
 
     var inStream = false;
     final List<int> bytes = [];
-    for (final line in value) {
+    for (final v in value) {
       if (inStream) {
-        bytes.addAll(line.codeUnits);
+        bytes.addAll(v.codeUnits);
         continue;
       }
-      final args = line.trimRight().split(' ');
+      final line = v.trimRight();
+      final args = line.split(' ');
       if (args.length > 1) {
         switch (args[0]) {
           case '/Width':
