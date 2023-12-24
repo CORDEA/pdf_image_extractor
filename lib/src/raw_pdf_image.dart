@@ -30,6 +30,16 @@ class RawPdfImageId {
     required this.objectNumber,
     required this.generationNumber,
   });
+
+  @override
+  int get hashCode => Object.hash(objectNumber, generationNumber);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RawPdfImageId &&
+          objectNumber == other.objectNumber &&
+          generationNumber == other.generationNumber;
 }
 
 enum RawPdfImageFilterType {
