@@ -1,3 +1,7 @@
+import 'dart:typed_data';
+
+import 'package:pdf_image_extractor/src/pdf_parser.dart';
+
 class RawPdfImage {
   final RawPdfImageId id;
   final int width;
@@ -40,6 +44,10 @@ class RawPdfImageId {
       other is RawPdfImageId &&
           objectNumber == other.objectNumber &&
           generationNumber == other.generationNumber;
+
+  @override
+  String toString() =>
+      'RawPdfImageId(objectNumber: $objectNumber,  generationNumber: $generationNumber)';
 }
 
 enum RawPdfImageFilterType {
@@ -69,9 +77,17 @@ enum RawPdfImageColorSpace {
 }
 
 class Serializer {
-  bool canDeserialize(List<String> value) => value.any((e) => e.contains('/Subtype /Image'));
+  final _parser = PdfDictionaryParser();
 
-  RawPdfImage deserialize(RawPdfImageId id, List<String> value) {
+  bool canDeserialize(List<String> value) {
+    final index = value.indexOf('/Subtype');
+    if (index < 0 || value.length <= index) {
+      return false;
+    }
+    return value[index + 1] == '/Image';
+  }
+
+  RawPdfImage deserialize(RawPdfImageId id, PdfObject value) {
     late int width;
     late int height;
     late RawPdfImageColorSpace colorSpace;
@@ -79,49 +95,31 @@ class Serializer {
     late int length;
     RawPdfImageFilterType? filter;
     RawPdfImageId? sMask;
-
-    var inStream = false;
-    final List<int> bytes = [];
-    for (final v in value) {
-      if (inStream) {
-        bytes.addAll(v.codeUnits);
-        continue;
+    _parser.parse(value.lines).forEach((key, value) {
+      switch (key) {
+        case '/Width':
+          width = _extractNumber(value.first);
+        case '/Height':
+          height = _extractNumber(value.first);
+        case '/ColorSpace':
+          colorSpace = RawPdfImageColorSpace._from(value.first);
+        case '/SMask':
+          if (value.length == 3 && value.last == 'R') {
+            sMask = RawPdfImageId(
+              objectNumber: _extractNumber(value[0]),
+              generationNumber: _extractNumber(value[1]),
+            );
+          }
+        case '/BitsPerComponent':
+          bitsPerComponent = _extractNumber(value.first);
+        case '/Filter':
+          filter = RawPdfImageFilterType._from(value.first);
+        case '/Length':
+          length = _extractNumber(value.first);
       }
-      final line = v.trim();
-      final args = line.split(' ');
-      if (args.length > 1) {
-        switch (args[0]) {
-          case '/Width':
-            width = _extractNumber(args[1]);
-          case '/Height':
-            height = _extractNumber(args[1]);
-          case '/ColorSpace':
-            colorSpace = RawPdfImageColorSpace._from(args[1]);
-          case '/SMask':
-            if (args.length > 3 && args[3] == 'R') {
-              sMask = RawPdfImageId(
-                objectNumber: _extractNumber(args[1]),
-                generationNumber: _extractNumber(args[2]),
-              );
-            }
-          case '/BitsPerComponent':
-            bitsPerComponent = _extractNumber(args[1]);
-          case '/Filter':
-            filter = RawPdfImageFilterType._from(args[1]);
-          case '/Length':
-            length = _extractNumber(args[1]);
-        }
-      }
-      if (line.endsWith('stream')) {
-        inStream = true;
-        continue;
-      }
-      if (line.endsWith('endstream')) {
-        inStream = false;
-        continue;
-      }
-    }
-
+    });
+    final stream = value.stream!;
+    assert(length == stream.length);
     return RawPdfImage(
       id: id,
       width: width,
@@ -131,7 +129,7 @@ class Serializer {
       filter: filter,
       length: length,
       sMask: sMask,
-      bytes: bytes,
+      bytes: Uint8List.fromList(stream.codeUnits),
     );
   }
 
