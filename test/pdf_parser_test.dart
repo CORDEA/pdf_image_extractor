@@ -56,7 +56,7 @@ void main() {
       parser = PdfDictionaryParser();
     });
 
-    test('parse dictionary', () {
+    test('parse dictionary without white-space', () {
       final parsed = parser.parse([
         '<</Type',
         '/XObject',
@@ -75,6 +75,22 @@ void main() {
         '/Subtype': ['/Image'],
         '/SMask': ['5', '0', 'R'],
         '/Length': ['3'],
+      });
+    });
+
+    test('parse dictionary', () {
+      final parsed = parser.parse([
+        '<<',
+        '/Type',
+        '/XObject',
+        '/Length',
+        '0',
+        '>>',
+      ]);
+
+      expect(parsed, {
+        '/Type': ['/XObject'],
+        '/Length': ['0'],
       });
     });
   });

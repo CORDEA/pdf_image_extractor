@@ -121,6 +121,9 @@ class PdfDictionaryParser {
         inDict = false;
         line = line.substring(0, line.length - 2);
       }
+      if (line.isEmpty) {
+        continue;
+      }
       if (line.startsWith('/') && key != null && value != null) {
         key = null;
         value = null;
