@@ -3,7 +3,7 @@ import 'package:pdf_image_extractor/pdf_image_extractor.dart';
 import 'package:pdf_image_extractor/src/pdf_parser.dart';
 import 'package:test/test.dart';
 
-class _MockPdfDictionaryParser extends Mock implements PdfDictionaryParser {}
+class _MockPdfTagParser extends Mock implements PdfTagParser {}
 
 void main() {
   group('RawPdfImageFilterType', () {
@@ -35,10 +35,10 @@ void main() {
 
   group('Serializer', () {
     late Serializer serializer;
-    late _MockPdfDictionaryParser parser;
+    late _MockPdfTagParser parser;
 
     setUp(() {
-      parser = _MockPdfDictionaryParser();
+      parser = _MockPdfTagParser();
       serializer = Serializer(parser);
     });
 
@@ -60,7 +60,7 @@ void main() {
     group('deserialize', () {
       test('given arguments', () {
         when(() => parser.parse(['line'])).thenReturn(
-          {
+          PdfTagDictionary({
             '/Type': ['/XObject'],
             '/Subtype': ['/Image'],
             '/Width': ['1'],
@@ -70,7 +70,7 @@ void main() {
             '/BitsPerComponent': ['5'],
             '/Filter': ['/FlateDecode'],
             '/Length': ['6'],
-          },
+          }),
         );
 
         final result = serializer.deserialize(
@@ -97,7 +97,7 @@ void main() {
 
     test('given arguments except for non-required ones', () {
       when(() => parser.parse(['line'])).thenReturn(
-        {
+        PdfTagDictionary({
           '/Type': ['/XObject'],
           '/Subtype': ['/Image'],
           '/Width': ['1'],
@@ -106,7 +106,7 @@ void main() {
           '/SMask': ['3', '4'],
           '/BitsPerComponent': ['5'],
           '/Length': ['6'],
-        },
+        }),
       );
 
       final result = serializer.deserialize(

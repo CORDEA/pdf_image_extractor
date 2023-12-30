@@ -47,16 +47,32 @@ void main() {
         });
       });
     }
+
+    test('parse the list', () {
+      final parsed = parser.parse(Uint8List.fromList('''
+      1 0 obj
+      [ /ICCBased 2 0 R ]
+      endobj
+      '''
+          .codeUnits));
+
+      expect(parsed, {
+        RawPdfImageId(objectNumber: 1, generationNumber: 0): PdfObject(
+          lines: ['[', '/ICCBased', '2', '0', 'R', ']'],
+          stream: null,
+        )
+      });
+    });
   });
 
-  group('PdfDictionaryParser', () {
-    late PdfDictionaryParser parser;
+  group('PdfTagParser', () {
+    late PdfTagParser parser;
 
     setUp(() {
-      parser = PdfDictionaryParser();
+      parser = PdfTagParser();
     });
 
-    test('parse dictionary without white-space', () {
+    test('parse a dictionary without white-space', () {
       final parsed = parser.parse([
         '<</Type',
         '/XObject',
@@ -70,7 +86,7 @@ void main() {
         '3>>',
       ]);
 
-      expect(parsed, {
+      expect((parsed as PdfTagDictionary).value, {
         '/Type': ['/XObject'],
         '/Subtype': ['/Image'],
         '/SMask': ['5', '0', 'R'],
@@ -78,7 +94,7 @@ void main() {
       });
     });
 
-    test('parse dictionary', () {
+    test('parse a dictionary', () {
       final parsed = parser.parse([
         '<<',
         '/Type',
@@ -88,10 +104,16 @@ void main() {
         '>>',
       ]);
 
-      expect(parsed, {
+      expect((parsed as PdfTagDictionary).value, {
         '/Type': ['/XObject'],
         '/Length': ['0'],
       });
+    });
+
+    test('parse a list', () {
+      final parsed = parser.parse(['[', '/ICCBased', '2', '0', 'R', ']']);
+
+      expect((parsed as PdfTagList).value, ['/ICCBased', '2', '0', 'R']);
     });
   });
 }

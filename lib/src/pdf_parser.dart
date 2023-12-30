@@ -99,42 +99,63 @@ class PdfObject {
   String toString() => 'PdfObject(lines: $lines, stream: $stream)';
 }
 
-class PdfDictionaryParser {
-  Map<String, List<String>> parse(List<String> lines) {
-    final Map<String, List<String>> map = {};
+class PdfTagParser {
+  PdfTag parse(List<String> lines) {
+    PdfTag? tag;
     String? key;
     List<String>? value;
-    var inDict = false;
     for (final v in lines) {
       var line = v.trim();
       if (line.startsWith('<<')) {
-        if (inDict) {
-          throw UnimplementedError();
-        }
-        inDict = true;
+        tag = PdfTagDictionary({});
         line = line.substring(2);
       }
-      if (!inDict) {
+      if (line.startsWith('[')) {
+        tag = PdfTagList([]);
+        line = line.substring(1);
+      }
+      if (tag == null) {
         continue;
       }
       if (line.endsWith('>>')) {
-        inDict = false;
         line = line.substring(0, line.length - 2);
+      }
+      if (line.endsWith(']')) {
+        line = line.substring(0, line.length - 1);
       }
       if (line.isEmpty) {
         continue;
       }
-      if (line.startsWith('/') && key != null && value != null) {
-        key = null;
-        value = null;
+      switch (tag) {
+        case PdfTagDictionary():
+          if (line.startsWith('/') && key != null && value != null) {
+            key = null;
+            value = null;
+          }
+          if (key == null) {
+            key = line;
+            continue;
+          }
+          value = (value ?? []) + [line];
+          tag.value[key] = value;
+        case PdfTagList():
+          tag.value.add(line);
       }
-      if (key == null) {
-        key = line;
-        continue;
-      }
-      value = (value ?? []) + [line];
-      map[key] = value;
     }
-    return map;
+    return tag!;
   }
+}
+
+sealed class PdfTag {}
+
+final class PdfTagDictionary extends PdfTag {
+  PdfTagDictionary(this.value);
+
+  final Map<String, List<String>> value;
+}
+
+final class PdfTagList extends PdfTag {
+  PdfTagList(this.value);
+
+  final List<String> value;
 }

@@ -79,7 +79,7 @@ enum RawPdfImageColorSpace {
 class Serializer {
   Serializer(this._parser);
 
-  final PdfDictionaryParser _parser;
+  final PdfTagParser _parser;
 
   bool canDeserialize(List<String> value) {
     final index = value.indexOf('/Subtype');
@@ -97,7 +97,11 @@ class Serializer {
     late int length;
     RawPdfImageFilterType? filter;
     RawPdfImageId? sMask;
-    _parser.parse(value.lines).forEach((key, value) {
+    final parsed = _parser.parse(value.lines);
+    if (parsed is! PdfTagDictionary) {
+      throw UnimplementedError();
+    }
+    parsed.value.forEach((key, value) {
       switch (key) {
         case '/Width':
           width = _extractNumber(value.first);
