@@ -54,7 +54,7 @@ enum RawPdfImageFilterType {
   flate,
   unknown;
 
-  factory RawPdfImageFilterType._from(String value) {
+  factory RawPdfImageFilterType.from(String value) {
     return switch (value) {
       '/FlateDecode' => flate,
       _ => unknown,
@@ -67,7 +67,7 @@ enum RawPdfImageColorSpace {
   gray,
   unknown;
 
-  factory RawPdfImageColorSpace._from(String value) {
+  factory RawPdfImageColorSpace.from(String value) {
     return switch (value) {
       '/DeviceRGB' => rgb,
       '/DeviceGray' => gray,
@@ -77,11 +77,13 @@ enum RawPdfImageColorSpace {
 }
 
 class Serializer {
-  final _parser = PdfDictionaryParser();
+  Serializer(this._parser);
+
+  final PdfDictionaryParser _parser;
 
   bool canDeserialize(List<String> value) {
     final index = value.indexOf('/Subtype');
-    if (index < 0 || value.length <= index) {
+    if (index < 0 || value.length <= index + 1) {
       return false;
     }
     return value[index + 1] == '/Image';
@@ -102,7 +104,7 @@ class Serializer {
         case '/Height':
           height = _extractNumber(value.first);
         case '/ColorSpace':
-          colorSpace = RawPdfImageColorSpace._from(value.first);
+          colorSpace = RawPdfImageColorSpace.from(value.first);
         case '/SMask':
           if (value.length == 3 && value.last == 'R') {
             sMask = RawPdfImageId(
@@ -113,7 +115,7 @@ class Serializer {
         case '/BitsPerComponent':
           bitsPerComponent = _extractNumber(value.first);
         case '/Filter':
-          filter = RawPdfImageFilterType._from(value.first);
+          filter = RawPdfImageFilterType.from(value.first);
         case '/Length':
           length = _extractNumber(value.first);
       }

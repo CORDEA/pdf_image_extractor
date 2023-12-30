@@ -9,7 +9,7 @@ class PdfImageExtractor {
   PdfImageExtractor(this.file);
 
   final File file;
-  final _serializer = Serializer();
+  final _serializer = Serializer(PdfDictionaryParser());
   late Uint8List _bytes;
 
   Future<List<RawPdfImage>> extract() async {
