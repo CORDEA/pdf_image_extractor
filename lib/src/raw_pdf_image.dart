@@ -101,27 +101,30 @@ class Serializer {
     if (parsed is! PdfTagDictionary) {
       throw UnimplementedError();
     }
-    parsed.value.forEach((key, value) {
-      switch (key) {
-        case '/Width':
-          width = _extractNumber(value.first);
-        case '/Height':
-          height = _extractNumber(value.first);
-        case '/ColorSpace':
-          colorSpace = RawPdfImageColorSpace.from(value.first);
-        case '/SMask':
-          if (value.length == 3 && value.last == 'R') {
-            sMask = RawPdfImageId(
-              objectNumber: _extractNumber(value[0]),
-              generationNumber: _extractNumber(value[1]),
-            );
-          }
-        case '/BitsPerComponent':
-          bitsPerComponent = _extractNumber(value.first);
-        case '/Filter':
-          filter = RawPdfImageFilterType.from(value.first);
-        case '/Length':
-          length = _extractNumber(value.first);
+    parsed.value.forEach((key, tag) {
+      if (tag is PdfTagList) {
+        final value = tag.value;
+        switch (key) {
+          case '/Width':
+            width = _extractNumber(value.first);
+          case '/Height':
+            height = _extractNumber(value.first);
+          case '/ColorSpace':
+            colorSpace = RawPdfImageColorSpace.from(value.first);
+          case '/SMask':
+            if (value.length == 3 && value.last == 'R') {
+              sMask = RawPdfImageId(
+                objectNumber: _extractNumber(value[0]),
+                generationNumber: _extractNumber(value[1]),
+              );
+            }
+          case '/BitsPerComponent':
+            bitsPerComponent = _extractNumber(value.first);
+          case '/Filter':
+            filter = RawPdfImageFilterType.from(value.first);
+          case '/Length':
+            length = _extractNumber(value.first);
+        }
       }
     });
     final stream = value.stream!;

@@ -19,7 +19,7 @@ void main() {
       0x0d,
       0x20,
     ]) {
-      test('parse the object delimited by $separator', () {
+      test('parse an object delimited by $separator', () {
         final test = [
           '4 0 obj',
           '<</Type /XObject',
@@ -48,7 +48,7 @@ void main() {
       });
     }
 
-    test('parse the list', () {
+    test('parse a list', () {
       final parsed = parser.parse(Uint8List.fromList('''
       1 0 obj
       [ /ICCBased 2 0 R ]
@@ -59,6 +59,41 @@ void main() {
       expect(parsed, {
         RawPdfImageId(objectNumber: 1, generationNumber: 0): PdfObject(
           lines: ['[', '/ICCBased', '2', '0', 'R', ']'],
+          stream: null,
+        )
+      });
+    });
+
+    test('parse an object containing a subdictionary', () {
+      final parsed = parser.parse(Uint8List.fromList('''
+      1 0 obj
+      << /Type /Example
+      /Key 1
+      /Subdictionary << /Key1 2
+      /Key2 true
+      >>
+      >>
+      endobj
+      '''
+          .codeUnits));
+
+      expect(parsed, {
+        RawPdfImageId(objectNumber: 1, generationNumber: 0): PdfObject(
+          lines: [
+            '<<',
+            '/Type',
+            '/Example',
+            '/Key',
+            '1',
+            '/Subdictionary',
+            '<<',
+            '/Key1',
+            '2',
+            '/Key2',
+            'true',
+            '>>',
+            '>>',
+          ],
           stream: null,
         )
       });
@@ -87,10 +122,10 @@ void main() {
       ]);
 
       expect((parsed as PdfTagDictionary).value, {
-        '/Type': ['/XObject'],
-        '/Subtype': ['/Image'],
-        '/SMask': ['5', '0', 'R'],
-        '/Length': ['3'],
+        '/Type': PdfTagList(['/XObject']),
+        '/Subtype': PdfTagList(['/Image']),
+        '/SMask': PdfTagList(['5', '0', 'R']),
+        '/Length': PdfTagList(['3']),
       });
     });
 
@@ -105,8 +140,8 @@ void main() {
       ]);
 
       expect((parsed as PdfTagDictionary).value, {
-        '/Type': ['/XObject'],
-        '/Length': ['0'],
+        '/Type': PdfTagList(['/XObject']),
+        '/Length': PdfTagList(['0']),
       });
     });
 
@@ -114,6 +149,36 @@ void main() {
       final parsed = parser.parse(['[', '/ICCBased', '2', '0', 'R', ']']);
 
       expect((parsed as PdfTagList).value, ['/ICCBased', '2', '0', 'R']);
+    });
+
+    test('parse an object containing a subdictionary', () {
+      final parsed = parser.parse([
+        '<<',
+        '/Type',
+        '/Example',
+        '/Key1',
+        '1',
+        '/Subdictionary',
+        '<<',
+        '/Key2',
+        '2',
+        '/Key3',
+        'true',
+        '>>',
+        '/Key4',
+        'false',
+        '>>',
+      ]);
+
+      expect((parsed as PdfTagDictionary).value, {
+        '/Type': PdfTagList(['/Example']),
+        '/Key1': PdfTagList(['1']),
+        '/Subdictionary': PdfTagDictionary({
+          '/Key2': PdfTagList(['2']),
+          '/Key3': PdfTagList(['true']),
+        }),
+        '/Key4': PdfTagList(['false']),
+      });
     });
   });
 }

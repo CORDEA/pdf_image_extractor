@@ -100,13 +100,28 @@ class PdfObject {
 }
 
 class PdfTagParser {
-  PdfTag parse(List<String> lines) {
+  PdfTag parse(List<String> lines) => _parse(lines).tag;
+
+  ({PdfTag tag, int index}) _parse(List<String> lines) {
     PdfTag? tag;
     String? key;
     List<String>? value;
-    for (final v in lines) {
-      var line = v.trim();
+    var i = 0;
+    while (i < lines.length) {
+      var line = lines[i].trim();
       if (line.startsWith('<<')) {
+        if (tag != null) {
+          final subTag = _parse(lines.sublist(i));
+          i += subTag.index + 1;
+          switch (tag) {
+            case PdfTagDictionary():
+              tag.value[key!] = subTag.tag;
+              key = null;
+            case PdfTagList():
+              throw UnimplementedError();
+          }
+          continue;
+        }
         tag = PdfTagDictionary({});
         line = line.substring(2);
       }
@@ -115,15 +130,23 @@ class PdfTagParser {
         line = line.substring(1);
       }
       if (tag == null) {
+        i++;
         continue;
       }
+      var end = false;
       if (line.endsWith('>>')) {
         line = line.substring(0, line.length - 2);
+        end = true;
       }
       if (line.endsWith(']')) {
         line = line.substring(0, line.length - 1);
+        end = true;
       }
       if (line.isEmpty) {
+        if (end) {
+          return (tag: tag, index: i);
+        }
+        i++;
         continue;
       }
       switch (tag) {
@@ -134,28 +157,75 @@ class PdfTagParser {
           }
           if (key == null) {
             key = line;
+            i++;
             continue;
           }
           value = (value ?? []) + [line];
-          tag.value[key] = value;
+          tag.value[key] = PdfTagList(value);
         case PdfTagList():
           tag.value.add(line);
       }
+      if (end) {
+        return (tag: tag, index: i);
+      }
+      i++;
     }
-    return tag!;
+    return (tag: tag!, index: -1);
   }
 }
 
-sealed class PdfTag {}
+sealed class PdfTag<T> {
+  PdfTag(this.value);
 
-final class PdfTagDictionary extends PdfTag {
-  PdfTagDictionary(this.value);
+  final T value;
 
-  final Map<String, List<String>> value;
+  @override
+  int get hashCode => value.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PdfTag && _PdfTagEquality().equals(this, other);
 }
 
-final class PdfTagList extends PdfTag {
-  PdfTagList(this.value);
+class _PdfTagEquality implements Equality<PdfTag> {
+  @override
+  bool equals(PdfTag e1, PdfTag e2) {
+    if (e1 is PdfTagList && e2 is PdfTagList) {
+      return ListEquality().equals(e1.value, e2.value);
+    }
+    if (e1 is PdfTagDictionary && e2 is PdfTagDictionary) {
+      if (e1.value.length != e2.value.length) {
+        return false;
+      }
+      return e1.value.entries.every((e) {
+        final tag = e2.value[e.key];
+        if (tag == null) {
+          return false;
+        }
+        return e.value == tag;
+      });
+    }
+    return false;
+  }
 
-  final List<String> value;
+  @override
+  int hash(PdfTag e) => e.value.hashCode;
+
+  @override
+  bool isValidKey(Object? o) => true;
+}
+
+final class PdfTagDictionary extends PdfTag<Map<String, PdfTag>> {
+  PdfTagDictionary(super.value);
+
+  @override
+  String toString() => 'PdfTagDictionary($value)';
+}
+
+final class PdfTagList extends PdfTag<List<String>> {
+  PdfTagList(super.value);
+
+  @override
+  String toString() => 'PdfTagList($value)';
 }

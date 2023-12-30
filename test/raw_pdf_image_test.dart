@@ -61,15 +61,15 @@ void main() {
       test('given arguments', () {
         when(() => parser.parse(['line'])).thenReturn(
           PdfTagDictionary({
-            '/Type': ['/XObject'],
-            '/Subtype': ['/Image'],
-            '/Width': ['1'],
-            '/Height': ['2'],
-            '/ColorSpace': ['/DeviceRGB'],
-            '/SMask': ['3', '4', 'R'],
-            '/BitsPerComponent': ['5'],
-            '/Filter': ['/FlateDecode'],
-            '/Length': ['6'],
+            '/Type': PdfTagList(['/XObject']),
+            '/Subtype': PdfTagList(['/Image']),
+            '/Width': PdfTagList(['1']),
+            '/Height': PdfTagList(['2']),
+            '/ColorSpace': PdfTagList(['/DeviceRGB']),
+            '/SMask': PdfTagList(['3', '4', 'R']),
+            '/BitsPerComponent': PdfTagList(['5']),
+            '/Filter': PdfTagList(['/FlateDecode']),
+            '/Length': PdfTagList(['6']),
           }),
         );
 
@@ -98,14 +98,14 @@ void main() {
     test('given arguments except for non-required ones', () {
       when(() => parser.parse(['line'])).thenReturn(
         PdfTagDictionary({
-          '/Type': ['/XObject'],
-          '/Subtype': ['/Image'],
-          '/Width': ['1'],
-          '/Height': ['2'],
-          '/ColorSpace': ['/DeviceRGB'],
-          '/SMask': ['3', '4'],
-          '/BitsPerComponent': ['5'],
-          '/Length': ['6'],
+          '/Type': PdfTagList(['/XObject']),
+          '/Subtype': PdfTagList(['/Image']),
+          '/Width': PdfTagList(['1']),
+          '/Height': PdfTagList(['2']),
+          '/ColorSpace': PdfTagList(['/DeviceRGB']),
+          '/SMask': PdfTagList(['3', '4']),
+          '/BitsPerComponent': PdfTagList(['5']),
+          '/Length': PdfTagList(['6']),
         }),
       );
 
