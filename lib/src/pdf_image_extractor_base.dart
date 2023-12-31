@@ -18,10 +18,9 @@ class PdfImageExtractor {
       return [];
     }
     final objects = PdfObjectParser().parse(_bytes);
-    objects.removeWhere((_, value) => !_serializer.canDeserialize(value.lines));
-    return objects
-        .map((key, value) => MapEntry(key, _serializer.deserialize(key, value)))
-        .values
+    return objects.entries
+        .where((e) => _serializer.canDeserialize(e.value.lines))
+        .map((e) => _serializer.deserialize(e.key, e.value, objects))
         .toList(growable: false);
   }
 

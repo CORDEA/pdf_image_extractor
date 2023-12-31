@@ -79,6 +79,7 @@ void main() {
             lines: ['line'],
             stream: '\x00\x00\x00\x00\x00\x00',
           ),
+          {},
         );
 
         expect(result.width, 1);
@@ -115,6 +116,7 @@ void main() {
           lines: ['line'],
           stream: '\x00\x00\x00\x00\x00\x00',
         ),
+        {},
       );
 
       expect(result.width, 1);

@@ -89,7 +89,11 @@ class Serializer {
     return value[index + 1] == '/Image';
   }
 
-  RawPdfImage deserialize(RawPdfImageId id, PdfObject value) {
+  RawPdfImage deserialize(
+    RawPdfImageId id,
+    PdfObject value,
+    Map<RawPdfImageId, PdfObject> map,
+  ) {
     late int width;
     late int height;
     late RawPdfImageColorSpace colorSpace;
@@ -110,7 +114,23 @@ class Serializer {
           case '/Height':
             height = _extractNumber(value.first);
           case '/ColorSpace':
-            colorSpace = RawPdfImageColorSpace.from(value.first);
+            if (value.length == 3 && value.last == 'R') {
+              final id = RawPdfImageId(
+                objectNumber: _extractNumber(value[0]),
+                generationNumber: _extractNumber(value[1]),
+              );
+              final ref = _parser.parse(map[id]!.lines);
+              if (ref is PdfTagList && ref.value.first == '/ICCBased') {
+                final profile = RawPdfImageId(
+                  objectNumber: _extractNumber(ref.value[1]),
+                  generationNumber: _extractNumber(ref.value[2]),
+                );
+                final tag = _parser.parse(map[profile]!.lines);
+                // TODO
+              }
+            } else {
+              colorSpace = RawPdfImageColorSpace.from(value.first);
+            }
           case '/SMask':
             if (value.length == 3 && value.last == 'R') {
               sMask = RawPdfImageId(
