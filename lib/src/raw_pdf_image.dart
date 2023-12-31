@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 class RawPdfImage {
   final RawPdfImageId id;
   final int width;
@@ -89,6 +91,25 @@ final class RawPdfImageColorSpaceIccBased extends RawPdfImageColorSpace {
       other is RawPdfImageColorSpaceIccBased &&
           n == other.n &&
           alternate == other.alternate;
+}
+
+final class RawPdfImageColorSpaceIndexed extends RawPdfImageColorSpace {
+  RawPdfImageColorSpaceIndexed(this.hival, this.base, this.table);
+
+  final int hival;
+  final PdfImageColorModel base;
+  final List<int> table;
+
+  @override
+  int get hashCode => Object.hash(hival, base, table);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RawPdfImageColorSpaceIndexed &&
+          hival == other.hival &&
+          base == other.base &&
+          ListEquality().equals(table, other.table);
 }
 
 final class RawPdfImageColorModel extends RawPdfImageColorSpace {

@@ -152,5 +152,43 @@ void main() {
         RawPdfImageColorSpaceIccBased(3, PdfImageColorModel.rgb),
       );
     });
+
+    test('given the indexed color space', () {
+      when(() => parser.parse(['line1'])).thenReturn(
+        PdfTagDictionary({
+          '/Width': PdfTagList(['0']),
+          '/Height': PdfTagList(['0']),
+          '/ColorSpace': PdfTagList(['2', '0', 'R']),
+          '/BitsPerComponent': PdfTagList(['0']),
+          '/Length': PdfTagList(['1']),
+        }),
+      );
+      when(() => parser.parse(['line2'])).thenReturn(
+        PdfTagList(['/Indexed', '/DeviceRGB', '2', '3', '0', 'R']),
+      );
+
+      final result = serializer.deserialize(
+        RawPdfImageId(objectNumber: 1, generationNumber: 0),
+        PdfObject(
+          lines: ['line1'],
+          stream: '\x00',
+        ),
+        {
+          RawPdfImageId(objectNumber: 2, generationNumber: 0): PdfObject(
+            lines: ['line2'],
+            stream: null,
+          ),
+          RawPdfImageId(objectNumber: 3, generationNumber: 0): PdfObject(
+            lines: [],
+            stream: '\x01',
+          ),
+        },
+      );
+
+      expect(
+        result.colorSpace,
+        RawPdfImageColorSpaceIndexed(2, PdfImageColorModel.rgb, [1]),
+      );
+    });
   });
 }

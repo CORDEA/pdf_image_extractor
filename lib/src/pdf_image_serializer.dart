@@ -47,21 +47,35 @@ class PdfImageSerializer {
                 generationNumber: _extractNumber(value[1]),
               );
               final ref = _parser.parse(map[id]!.lines);
-              if (ref is PdfTagList && ref.value.first == '/ICCBased') {
-                final profile = RawPdfImageId(
-                  objectNumber: _extractNumber(ref.value[1]),
-                  generationNumber: _extractNumber(ref.value[2]),
-                );
-                final tag = _parser.parse(map[profile]!.lines);
-                if (tag is PdfTagDictionary) {
-                  colorSpace = RawPdfImageColorSpaceIccBased(
-                    _extractNumber(
-                      (tag.value['/N'] as PdfTagList).value[0],
-                    ),
-                    PdfImageColorModel.from(
-                      (tag.value['/Alternate'] as PdfTagList).value[0],
-                    ),
-                  );
+              if (ref is PdfTagList) {
+                switch (ref.value.first) {
+                  case '/Indexed':
+                    final hival = _extractNumber(ref.value[2]);
+                    final lookup = map[RawPdfImageId(
+                      objectNumber: _extractNumber(ref.value[3]),
+                      generationNumber: _extractNumber(ref.value[4]),
+                    )]!;
+                    colorSpace = RawPdfImageColorSpaceIndexed(
+                      hival,
+                      PdfImageColorModel.from(ref.value[1]),
+                      lookup.stream!.codeUnits,
+                    );
+                  case '/ICCBased':
+                    final profile = RawPdfImageId(
+                      objectNumber: _extractNumber(ref.value[1]),
+                      generationNumber: _extractNumber(ref.value[2]),
+                    );
+                    final tag = _parser.parse(map[profile]!.lines);
+                    if (tag is PdfTagDictionary) {
+                      colorSpace = RawPdfImageColorSpaceIccBased(
+                        _extractNumber(
+                          (tag.value['/N'] as PdfTagList).value[0],
+                        ),
+                        PdfImageColorModel.from(
+                          (tag.value['/Alternate'] as PdfTagList).value[0],
+                        ),
+                      );
+                    }
                 }
               }
             } else {

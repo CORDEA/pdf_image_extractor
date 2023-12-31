@@ -50,6 +50,8 @@ class PdfImageProcessor {
             case PdfImageColorModel.unknown:
               channels = n + (mask == null ? 0 : 1);
           }
+        case RawPdfImageColorSpaceIndexed():
+          throw UnimplementedError();
         case RawPdfImageColorModel(value: final value):
           switch (value) {
             case PdfImageColorModel.rgb:
