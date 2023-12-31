@@ -62,18 +62,51 @@ enum RawPdfImageFilterType {
   }
 }
 
-enum RawPdfImageColorSpace {
+enum PdfImageColorModel {
   rgb,
   gray,
   unknown;
 
-  factory RawPdfImageColorSpace.from(String value) {
+  factory PdfImageColorModel.from(String value) {
     return switch (value) {
       '/DeviceRGB' => rgb,
       '/DeviceGray' => gray,
       _ => unknown,
     };
   }
+}
+
+sealed class RawPdfImageColorSpace {}
+
+final class RawPdfImageColorSpaceIccBased extends RawPdfImageColorSpace {
+  RawPdfImageColorSpaceIccBased(this.n, this.alternate);
+
+  final int n;
+  final PdfImageColorModel alternate;
+
+  @override
+  int get hashCode => Object.hash(n, alternate);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RawPdfImageColorSpaceIccBased &&
+          n == other.n &&
+          alternate == other.alternate;
+}
+
+final class RawPdfImageColorModel extends RawPdfImageColorSpace {
+  RawPdfImageColorModel(this.value);
+
+  final PdfImageColorModel value;
+
+  @override
+  int get hashCode => value.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RawPdfImageColorModel && value == other.value;
 }
 
 class Serializer {
@@ -126,10 +159,20 @@ class Serializer {
                   generationNumber: _extractNumber(ref.value[2]),
                 );
                 final tag = _parser.parse(map[profile]!.lines);
-                // TODO
+                if (tag is PdfTagDictionary) {
+                  colorSpace = RawPdfImageColorSpaceIccBased(
+                    _extractNumber(
+                      (tag.value['/N'] as PdfTagList).value[0],
+                    ),
+                    PdfImageColorModel.from(
+                      (tag.value['/Alternate'] as PdfTagList).value[0],
+                    ),
+                  );
+                }
               }
             } else {
-              colorSpace = RawPdfImageColorSpace.from(value.first);
+              colorSpace =
+                  RawPdfImageColorModel(PdfImageColorModel.from(value.first));
             }
           case '/SMask':
             if (value.length == 3 && value.last == 'R') {

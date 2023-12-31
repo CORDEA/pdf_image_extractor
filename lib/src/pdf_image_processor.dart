@@ -36,21 +36,38 @@ class PdfImageProcessor {
       final source = _decode(e.source);
       final mask = e.mask == null ? null : _decode(e.mask!);
       final int channels;
-      switch (e.source.colorSpace) {
-        case RawPdfImageColorSpace.rgb:
-          channels = mask == null ? 3 : 4;
-        case RawPdfImageColorSpace.gray:
-          channels = 1;
-        case RawPdfImageColorSpace.unknown:
-          throw UnimplementedError();
+      final colorSpace = e.source.colorSpace;
+      switch (colorSpace) {
+        case RawPdfImageColorSpaceIccBased(
+            n: final n,
+            alternate: final alternate,
+          ):
+          switch (alternate) {
+            case PdfImageColorModel.rgb:
+              channels = mask == null ? 3 : 4;
+            case PdfImageColorModel.gray:
+              channels = 1;
+            case PdfImageColorModel.unknown:
+              channels = n + (mask == null ? 0 : 1);
+          }
+        case RawPdfImageColorModel(value: final value):
+          switch (value) {
+            case PdfImageColorModel.rgb:
+              channels = mask == null ? 3 : 4;
+            case PdfImageColorModel.gray:
+              channels = 1;
+            case PdfImageColorModel.unknown:
+              throw UnimplementedError();
+          }
       }
       return Image(
         width: e.source.width,
         height: e.source.height,
         numChannels: channels,
       )..forEachIndexed((i, image) {
-          switch (e.source.colorSpace) {
-            case RawPdfImageColorSpace.rgb:
+          switch (channels) {
+            case 3:
+            case 4:
               final r = source[i * 3];
               final g = source[i * 3 + 1];
               final b = source[i * 3 + 2];
@@ -60,9 +77,9 @@ class PdfImageProcessor {
                 ..g = g
                 ..b = b
                 ..a = a;
-            case RawPdfImageColorSpace.gray:
+            case 1:
               image.r = source[i];
-            case RawPdfImageColorSpace.unknown:
+            default:
               throw UnimplementedError();
           }
         });

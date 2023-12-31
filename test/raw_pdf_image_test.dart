@@ -19,16 +19,16 @@ void main() {
     });
   });
 
-  group('RawPdfImageColorSpace', () {
+  group('PdfImageColorModel', () {
     final tests = {
-      RawPdfImageColorSpace.rgb: '/DeviceRGB',
-      RawPdfImageColorSpace.gray: '/DeviceGray',
-      RawPdfImageColorSpace.unknown: '/',
+      PdfImageColorModel.rgb: '/DeviceRGB',
+      PdfImageColorModel.gray: '/DeviceGray',
+      PdfImageColorModel.unknown: '/',
     };
 
     tests.forEach((key, value) {
       test('from $value', () {
-        expect(RawPdfImageColorSpace.from(value), key);
+        expect(PdfImageColorModel.from(value), key);
       });
     });
   });
@@ -84,7 +84,10 @@ void main() {
 
         expect(result.width, 1);
         expect(result.height, 2);
-        expect(result.colorSpace, RawPdfImageColorSpace.rgb);
+        expect(
+          result.colorSpace,
+          RawPdfImageColorModel(PdfImageColorModel.rgb),
+        );
         expect(
           result.sMask,
           RawPdfImageId(objectNumber: 3, generationNumber: 4),
@@ -121,12 +124,59 @@ void main() {
 
       expect(result.width, 1);
       expect(result.height, 2);
-      expect(result.colorSpace, RawPdfImageColorSpace.rgb);
+      expect(
+        result.colorSpace,
+        RawPdfImageColorModel(PdfImageColorModel.rgb),
+      );
       expect(result.sMask, isNull);
       expect(result.bitsPerComponent, 5);
       expect(result.filter, isNull);
       expect(result.length, 6);
       expect(result.bytes, [0, 0, 0, 0, 0, 0]);
+    });
+
+    test('given the ICCBased color space', () {
+      when(() => parser.parse(['line1'])).thenReturn(
+        PdfTagDictionary({
+          '/Width': PdfTagList(['0']),
+          '/Height': PdfTagList(['0']),
+          '/ColorSpace': PdfTagList(['2', '0', 'R']),
+          '/BitsPerComponent': PdfTagList(['0']),
+          '/Length': PdfTagList(['1']),
+        }),
+      );
+      when(() => parser.parse(['line2'])).thenReturn(
+        PdfTagList(['/ICCBased', '3', '0', 'R']),
+      );
+      when(() => parser.parse(['line3'])).thenReturn(
+        PdfTagDictionary({
+          '/N': PdfTagList(['3']),
+          '/Alternate': PdfTagList(['/DeviceRGB']),
+        }),
+      );
+
+      final result = serializer.deserialize(
+        RawPdfImageId(objectNumber: 1, generationNumber: 0),
+        PdfObject(
+          lines: ['line1'],
+          stream: '\x00',
+        ),
+        {
+          RawPdfImageId(objectNumber: 2, generationNumber: 0): PdfObject(
+            lines: ['line2'],
+            stream: null,
+          ),
+          RawPdfImageId(objectNumber: 3, generationNumber: 0): PdfObject(
+            lines: ['line3'],
+            stream: null,
+          ),
+        },
+      );
+
+      expect(
+        result.colorSpace,
+        RawPdfImageColorSpaceIccBased(3, PdfImageColorModel.rgb),
+      );
     });
   });
 }

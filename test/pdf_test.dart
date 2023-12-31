@@ -19,9 +19,19 @@ void main() {
       expect(image.filter, RawPdfImageFilterType.flate);
     }
     expect(rawImages[0].length, 15302);
-    expect(rawImages[0].colorSpace, RawPdfImageColorSpace.unknown);
+    expect(
+      rawImages[0].colorSpace,
+      RawPdfImageColorSpaceIccBased(3, PdfImageColorModel.rgb),
+    );
     expect(rawImages[1].length, 5108);
-    expect(rawImages[1].colorSpace, RawPdfImageColorSpace.gray);
+    expect(
+      rawImages[1].colorSpace,
+      RawPdfImageColorModel(PdfImageColorModel.gray),
+    );
+
+    final images = PdfImageProcessor(rawImages).write();
+    expect(images, hasLength(1));
+    expect(images.first.lengthInBytes, 448 * 448 * 4);
   });
 
   test('test2.pdf', () async {
@@ -36,9 +46,15 @@ void main() {
       expect(image.filter, RawPdfImageFilterType.flate);
     }
     expect(rawImages[0].length, 12925);
-    expect(rawImages[0].colorSpace, RawPdfImageColorSpace.rgb);
+    expect(
+      rawImages[0].colorSpace,
+      RawPdfImageColorModel(PdfImageColorModel.rgb),
+    );
     expect(rawImages[1].length, 4064);
-    expect(rawImages[1].colorSpace, RawPdfImageColorSpace.gray);
+    expect(
+      rawImages[1].colorSpace,
+      RawPdfImageColorModel(PdfImageColorModel.gray),
+    );
 
     final images = PdfImageProcessor(rawImages).write();
     expect(images, hasLength(1));
