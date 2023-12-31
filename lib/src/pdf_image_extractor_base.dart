@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
+import 'package:pdf_image_extractor/src/pdf_image_serializer.dart';
 import 'package:pdf_image_extractor/src/pdf_parser.dart';
 import 'package:pdf_image_extractor/src/raw_pdf_image.dart';
 
@@ -9,7 +10,7 @@ class PdfImageExtractor {
   PdfImageExtractor(this.file);
 
   final File file;
-  final _serializer = Serializer(PdfTagParser());
+  final _serializer = PdfImageSerializer(PdfTagParser());
   late Uint8List _bytes;
 
   Future<List<RawPdfImage>> extract() async {
