@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:collection/collection.dart';
 import 'package:pdf_image_extractor/pdf_image_extractor.dart';
 
-class _Splitter {
+class PdfSplitter {
   static const _separators = [
     0x09,
     0x0a,
@@ -15,13 +15,57 @@ class _Splitter {
   List<String> split(Uint8List bytes) {
     return bytes
         .splitAfter((e) => _separators.contains(e))
+        .split()
+        .map((e) => e.splitBefore((e) => e == 0x2f))
+        .expand((e) => e)
+        .whereNot((e) => e.isEmpty)
         .map((e) => String.fromCharCodes(e))
         .toList(growable: false);
   }
 }
 
+extension on Iterable<List<int>> {
+  static const _dictionaries = [0x3c, 0x3e];
+  static const _lists = [0x5b, 0x5d];
+
+  Iterable<List<int>> split() sync* {
+    List<int> chunk = [];
+    for (final line in this) {
+      outer:
+      for (var i = 0; i < line.length; i++) {
+        for (final e in _dictionaries) {
+          if (line[i] == e && line.length > i + 1 && line[i + 1] == e) {
+            if (chunk.isNotEmpty) {
+              yield chunk;
+            }
+            yield [e, e];
+            chunk = [];
+            i++;
+            continue outer;
+          }
+        }
+        for (final e in _lists) {
+          if (line[i] == e) {
+            if (chunk.isNotEmpty) {
+              yield chunk;
+            }
+            yield [e];
+            chunk = [];
+            continue outer;
+          }
+        }
+        chunk.add(line[i]);
+      }
+      if (chunk.isNotEmpty) {
+        yield chunk;
+        chunk = [];
+      }
+    }
+  }
+}
+
 class PdfObjectParser {
-  final _splitter = _Splitter();
+  final _splitter = PdfSplitter();
 
   Map<RawPdfImageId, PdfObject> parse(Uint8List bytes) {
     final lines = _splitter.split(bytes);
@@ -106,13 +150,12 @@ class PdfTagParser {
     PdfTag? tag;
     String? key;
     List<String>? value;
-    var i = 0;
-    while (i < lines.length) {
+    for (var i = 0; i < lines.length; i++) {
       var line = lines[i].trim();
-      if (line.startsWith('<<')) {
+      if (line == '<<') {
         if (tag != null) {
           final subTag = _parse(lines.sublist(i));
-          i += subTag.index + 1;
+          i += subTag.index;
           switch (tag) {
             case PdfTagDictionary():
               tag.value[key!] = subTag.tag;
@@ -123,31 +166,17 @@ class PdfTagParser {
           continue;
         }
         tag = PdfTagDictionary({});
-        line = line.substring(2);
+        continue;
       }
-      if (line.startsWith('[')) {
+      if (line == '[') {
         tag = PdfTagList([]);
-        line = line.substring(1);
+        continue;
       }
       if (tag == null) {
-        i++;
         continue;
       }
-      var end = false;
-      if (line.endsWith('>>')) {
-        line = line.substring(0, line.length - 2);
-        end = true;
-      }
-      if (line.endsWith(']')) {
-        line = line.substring(0, line.length - 1);
-        end = true;
-      }
-      if (line.isEmpty) {
-        if (end) {
-          return (tag: tag, index: i);
-        }
-        i++;
-        continue;
+      if (line == '>>' || line == ']') {
+        return (tag: tag, index: i);
       }
       switch (tag) {
         case PdfTagDictionary():
@@ -157,7 +186,6 @@ class PdfTagParser {
           }
           if (key == null) {
             key = line;
-            i++;
             continue;
           }
           value = (value ?? []) + [line];
@@ -165,10 +193,6 @@ class PdfTagParser {
         case PdfTagList():
           tag.value.add(line);
       }
-      if (end) {
-        return (tag: tag, index: i);
-      }
-      i++;
     }
     return (tag: tag!, index: -1);
   }

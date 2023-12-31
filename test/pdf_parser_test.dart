@@ -5,6 +5,36 @@ import 'package:pdf_image_extractor/src/pdf_parser.dart';
 import 'package:test/test.dart';
 
 void main() {
+  group('PdfSplitter', () {
+    late PdfSplitter splitter;
+
+    setUp(() {
+      splitter = PdfSplitter();
+    });
+
+    final tests = {
+      'a\x09b\x0ac\x0cd\x0de\x20\x0a\x0c': [
+        'a\x09',
+        'b\x0a',
+        'c\x0c',
+        'd\x0d',
+        'e\x20',
+        '\x0a',
+        '\x0c',
+      ],
+      '<<a>>': ['<<', 'a', '>>'],
+      '<a>>': ['<a', '>>'],
+      '<<[a>>]': ['<<', '[', 'a', '>>', ']'],
+      '/a/b': ['/a', '/b'],
+    };
+
+    tests.forEach((key, value) {
+      test('split $key', () {
+        expect(splitter.split(Uint8List.fromList(key.codeUnits)), value);
+      });
+    });
+  });
+
   group('PdfObjectParser', () {
     late PdfObjectParser parser;
 
@@ -35,18 +65,44 @@ void main() {
         expect(parsed, {
           RawPdfImageId(objectNumber: 4, generationNumber: 0): PdfObject(
             lines: [
-              '<</Type',
+              '<<',
+              '/Type',
               '/XObject',
               '/Subtype',
               '/Image',
               '/Length',
-              '3>>',
+              '3',
+              '>>',
             ],
             stream: '\x00\x01\x02',
           ),
         });
       });
     }
+
+    test('parse an object without delimiter', () {
+      final test = '''
+      4 0 obj
+      <</Type/XObject/Subtype/Image>>
+      endobj
+      ''';
+
+      final parsed = parser.parse(Uint8List.fromList(test.codeUnits));
+
+      expect(parsed, {
+        RawPdfImageId(objectNumber: 4, generationNumber: 0): PdfObject(
+          lines: [
+            '<<',
+            '/Type',
+            '/XObject',
+            '/Subtype',
+            '/Image',
+            '>>',
+          ],
+          stream: null,
+        ),
+      });
+    });
 
     test('parse a list', () {
       final parsed = parser.parse(Uint8List.fromList('''
@@ -109,7 +165,8 @@ void main() {
 
     test('parse a dictionary without white-space', () {
       final parsed = parser.parse([
-        '<</Type',
+        '<<',
+        '/Type',
         '/XObject',
         '/Subtype',
         '/Image',
@@ -118,7 +175,8 @@ void main() {
         '0',
         'R',
         '/Length',
-        '3>>',
+        '3',
+        '>>',
       ]);
 
       expect((parsed as PdfTagDictionary).value, {
