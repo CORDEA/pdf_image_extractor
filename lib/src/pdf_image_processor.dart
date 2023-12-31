@@ -5,7 +5,7 @@ import 'package:image/image.dart';
 import 'package:pdf_image_extractor/src/raw_pdf_image.dart';
 
 class PdfImageProcessor {
-  PdfImageProcessor(List<RawPdfImage> images, {this.leaveMask = false})
+  PdfImageProcessor(Iterable<RawPdfImage> images, {this.leaveMask = false})
       : _imageMap = Map.fromIterable(images, key: (e) => e.id);
 
   final _zlibDecoder = ZLibDecoder();
@@ -50,8 +50,7 @@ class PdfImageProcessor {
             case PdfImageColorModel.unknown:
               channels = n + (mask == null ? 0 : 1);
           }
-        case RawPdfImageColorSpaceIndexed():
-          throw UnimplementedError();
+        case RawPdfImageColorSpaceIndexed(base: final value):
         case RawPdfImageColorModel(value: final value):
           switch (value) {
             case PdfImageColorModel.rgb:
@@ -70,17 +69,32 @@ class PdfImageProcessor {
           switch (channels) {
             case 3:
             case 4:
-              final r = source[i * 3];
-              final g = source[i * 3 + 1];
-              final b = source[i * 3 + 2];
+              final ({int r, int g, int b}) rgb;
+              if (colorSpace is RawPdfImageColorSpaceIndexed) {
+                rgb = (
+                  r: colorSpace.table[source[i] * 3],
+                  g: colorSpace.table[source[i] * 3 + 1],
+                  b: colorSpace.table[source[i] * 3 + 2],
+                );
+              } else {
+                rgb = (
+                  r: source[i * 3],
+                  g: source[i * 3 + 1],
+                  b: source[i * 3 + 2],
+                );
+              }
               final a = mask?[i] ?? 255;
               image
-                ..r = r
-                ..g = g
-                ..b = b
+                ..r = rgb.r
+                ..g = rgb.g
+                ..b = rgb.b
                 ..a = a;
             case 1:
-              image.r = source[i];
+              if (colorSpace is RawPdfImageColorSpaceIndexed) {
+                image.r = colorSpace.table[source[i]];
+              } else {
+                image.r = source[i];
+              }
             default:
               throw UnimplementedError();
           }
