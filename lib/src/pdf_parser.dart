@@ -152,7 +152,7 @@ class PdfTagParser {
     List<String>? value;
     for (var i = 0; i < lines.length; i++) {
       var line = lines[i].trim();
-      if (line == '<<') {
+      if (line == '<<' || line == '[') {
         if (tag != null) {
           final subTag = _parse(lines.sublist(i));
           i += subTag.index;
@@ -165,11 +165,11 @@ class PdfTagParser {
           }
           continue;
         }
-        tag = PdfTagDictionary({});
-        continue;
-      }
-      if (line == '[') {
-        tag = PdfTagList([]);
+        if (line == '<<') {
+          tag = PdfTagDictionary({});
+        } else {
+          tag = PdfTagList([]);
+        }
         continue;
       }
       if (tag == null) {

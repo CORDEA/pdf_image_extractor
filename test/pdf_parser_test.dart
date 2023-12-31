@@ -238,5 +238,29 @@ void main() {
         '/Key4': PdfTagList(['false']),
       });
     });
+
+    test('parse an object containing a sublist', () {
+      final parsed = parser.parse([
+        '<<',
+        '/Type',
+        '/Example',
+        '/Key1',
+        '1',
+        '/Sublist',
+        '[',
+        '2',
+        ']',
+        '/Key4',
+        'false',
+        '>>',
+      ]);
+
+      expect((parsed as PdfTagDictionary).value, {
+        '/Type': PdfTagList(['/Example']),
+        '/Key1': PdfTagList(['1']),
+        '/Sublist': PdfTagList(['2']),
+        '/Key4': PdfTagList(['false']),
+      });
+    });
   });
 }
