@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:pdf_image_extractor/pdf_image_extractor.dart';
-import 'package:pdf_image_extractor/src/pdf_image_processor.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -59,5 +58,23 @@ void main() {
     final images = PdfImageProcessor(rawImages).write();
     expect(images, hasLength(1));
     expect(images.first.lengthInBytes, 448 * 448 * 4);
+  });
+
+  test('test3.pdf', () async {
+    extractor = PdfImageExtractor(File('./test/fixtures/test3.pdf'));
+
+    final rawImages = await extractor.extract();
+    expect(rawImages, hasLength(1));
+    for (final image in rawImages) {
+      expect(image.width, 2800);
+      expect(image.height, 2801);
+      expect(image.bitsPerComponent, 8);
+      expect(image.filter, [PdfImageFilterType.dct]);
+    }
+    expect(rawImages[0].length, 210923);
+    expect(
+      rawImages[0].colorSpace,
+      RawPdfImageColorModel(PdfImageColorModel.rgb),
+    );
   });
 }
