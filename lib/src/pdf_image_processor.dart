@@ -4,11 +4,34 @@ import 'package:collection/collection.dart';
 import 'package:image/image.dart';
 import 'package:pdf_image_extractor/src/raw_pdf_image.dart';
 
-class PdfImageProcessor {
-  PdfImageProcessor(Iterable<RawPdfImage> images, {this.leaveMask = false})
-      : _imageMap = Map.fromIterable(images, key: (e) => e.id);
+abstract interface class PdfImageDecoder {
+  List<RawPdfImageFilterType> get key;
 
+  List<int> decode(List<int> bytes);
+}
+
+final class PdfFlateImageDecoder implements PdfImageDecoder {
   final _zlibDecoder = ZLibDecoder();
+
+  @override
+  List<RawPdfImageFilterType> get key => [RawPdfImageFilterType.flate];
+
+  @override
+  List<int> decode(List<int> bytes) => _zlibDecoder.convert(bytes);
+}
+
+final _defaultDecoders = [PdfFlateImageDecoder()];
+
+class PdfImageProcessor {
+  PdfImageProcessor(
+    Iterable<RawPdfImage> images, {
+    List<PdfImageDecoder>? decoders,
+    this.leaveMask = false,
+  })  : _imageMap = Map.fromIterable(images, key: (e) => e.id),
+        _decoders = decoders ?? _defaultDecoders;
+
+  final _equality = ListEquality();
+  final List<PdfImageDecoder> _decoders;
   final Map<RawPdfImageId, RawPdfImage> _imageMap;
   final bool leaveMask;
 
@@ -103,12 +126,11 @@ class PdfImageProcessor {
   }
 
   List<int> _decode(RawPdfImage image) {
-    switch (image.filter) {
-      case RawPdfImageFilterType.flate:
-        return _zlibDecoder.convert(image.bytes);
-      case RawPdfImageFilterType.unknown:
-      case null:
-        throw UnimplementedError();
+    final decoder = _decoders
+        .firstWhereOrNull((e) => _equality.equals(e.key, [image.filter]));
+    if (decoder == null) {
+      throw UnimplementedError();
     }
+    return decoder.decode(image.bytes);
   }
 }

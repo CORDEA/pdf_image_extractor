@@ -49,13 +49,30 @@ class RawPdfImageId {
 }
 
 enum RawPdfImageFilterType {
+  asciiHex,
+  ascii85,
+  lzw,
   flate,
-  unknown;
+  runLength,
+  ccittFax,
+  jbig2,
+  dct,
+  jpx,
+  crypt;
 
   factory RawPdfImageFilterType.from(String value) {
     return switch (value) {
+      '/ASCIIHexDecode' => asciiHex,
+      '/ASCII85Decode' => ascii85,
+      '/LZWDecode' => lzw,
       '/FlateDecode' => flate,
-      _ => unknown,
+      '/RunLengthDecode' => runLength,
+      '/CCITTFaxDecode' => ccittFax,
+      '/JBIG2Decode' => jbig2,
+      '/DCTDecode' => dct,
+      '/JPXDecode' => jpx,
+      '/Crypt' => crypt,
+      String() => throw UnimplementedError(),
     };
   }
 }

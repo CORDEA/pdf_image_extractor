@@ -5,7 +5,15 @@ void main() {
   group('RawPdfImageFilterType', () {
     final tests = {
       RawPdfImageFilterType.flate: '/FlateDecode',
-      RawPdfImageFilterType.unknown: '/',
+      RawPdfImageFilterType.jpx: '/JPXDecode',
+      RawPdfImageFilterType.asciiHex: '/ASCIIHexDecode',
+      RawPdfImageFilterType.lzw: '/LZWDecode',
+      RawPdfImageFilterType.runLength: '/RunLengthDecode',
+      RawPdfImageFilterType.crypt: '/Crypt',
+      RawPdfImageFilterType.dct: '/DCTDecode',
+      RawPdfImageFilterType.ascii85: '/ASCII85Decode',
+      RawPdfImageFilterType.ccittFax: '/CCITTFaxDecode',
+      RawPdfImageFilterType.jbig2: '/JBIG2Decode',
     };
 
     tests.forEach((key, value) {
