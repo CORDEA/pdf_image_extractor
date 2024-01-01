@@ -6,7 +6,7 @@ class RawPdfImage {
   final int height;
   final int bitsPerComponent;
   final RawPdfImageColorSpace colorSpace;
-  final RawPdfImageFilterType? filter;
+  final List<RawPdfImageFilterType> filter;
   final int length;
   final RawPdfImageId? sMask;
   final List<int> bytes;

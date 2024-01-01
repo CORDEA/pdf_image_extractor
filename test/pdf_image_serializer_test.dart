@@ -67,7 +67,7 @@ void main() {
           RawPdfImageId(objectNumber: 3, generationNumber: 4),
         );
         expect(result.bitsPerComponent, 5);
-        expect(result.filter, RawPdfImageFilterType.flate);
+        expect(result.filter, [RawPdfImageFilterType.flate]);
         expect(result.length, 6);
         expect(result.bytes, [0, 0, 0, 0, 0, 0]);
       });
@@ -104,9 +104,33 @@ void main() {
       );
       expect(result.sMask, isNull);
       expect(result.bitsPerComponent, 5);
-      expect(result.filter, isNull);
+      expect(result.filter, []);
       expect(result.length, 6);
       expect(result.bytes, [0, 0, 0, 0, 0, 0]);
+    });
+
+    test('given multiple filters', () {
+      when(() => parser.parse(['line'])).thenReturn(
+        PdfTagDictionary({
+          '/Width': PdfTagList(['1']),
+          '/Height': PdfTagList(['2']),
+          '/ColorSpace': PdfTagList(['/DeviceRGB']),
+          '/BitsPerComponent': PdfTagList(['5']),
+          '/Filter': PdfTagList(['/ASCIIHexDecode', '/LZWDecode']),
+          '/Length': PdfTagList(['1']),
+        }),
+      );
+
+      final result = serializer.deserialize(
+        RawPdfImageId(objectNumber: 1, generationNumber: 0),
+        PdfObject(lines: ['line'], stream: '\x00'),
+        {},
+      );
+
+      expect(
+        result.filter,
+        [RawPdfImageFilterType.asciiHex, RawPdfImageFilterType.lzw],
+      );
     });
 
     test('given the ICCBased color space', () {

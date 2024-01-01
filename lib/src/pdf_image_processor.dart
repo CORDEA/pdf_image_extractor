@@ -127,7 +127,7 @@ class PdfImageProcessor {
 
   List<int> _decode(RawPdfImage image) {
     final decoder = _decoders
-        .firstWhereOrNull((e) => _equality.equals(e.key, [image.filter]));
+        .firstWhereOrNull((e) => _equality.equals(e.key, image.filter));
     if (decoder == null) {
       throw UnimplementedError();
     }
