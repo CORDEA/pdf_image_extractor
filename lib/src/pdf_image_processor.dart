@@ -6,22 +6,44 @@ import 'package:image/image.dart';
 import 'package:pdf_image_extractor/src/raw_pdf_image.dart';
 
 abstract interface class PdfImageDecoder {
-  List<PdfImageFilterType> get key;
+  bool canDecode(List<PdfImageFilterType> filter);
 
   List<int> decode(List<int> bytes);
 }
 
-final class PdfFlateImageDecoder implements PdfImageDecoder {
-  final _zlibDecoder = ZLibDecoder();
+final class _PdfFlateImageDecoder implements PdfImageDecoder {
+  final zlibDecoder = ZLibDecoder();
 
   @override
-  List<PdfImageFilterType> get key => [PdfImageFilterType.flate];
+  bool canDecode(List<PdfImageFilterType> filter) =>
+      filter.contains(PdfImageFilterType.flate);
 
   @override
-  List<int> decode(List<int> bytes) => _zlibDecoder.convert(bytes);
+  List<int> decode(List<int> bytes) => zlibDecoder.convert(bytes);
 }
 
-final _defaultDecoders = [PdfFlateImageDecoder()];
+final class _PdfAsciiHexImageDecoder implements PdfImageDecoder {
+  @override
+  bool canDecode(List<PdfImageFilterType> filter) =>
+      filter.contains(PdfImageFilterType.asciiHex);
+
+  @override
+  List<int> decode(List<int> bytes) => bytes
+      .takeWhile((value) => value != 0x3e)
+      .map(
+        (e) => switch (e) {
+          >= 0x30 && <= 0x39 => e & 0xf,
+          >= 0x41 && <= 0x46 || >= 0x61 && <= 0x66 => (e & 0xf) + 0x9,
+          int() => null,
+        },
+      )
+      .whereNotNull()
+      .slices(2)
+      .map((e) => e[0] << 4 | e[1])
+      .toList(growable: false);
+}
+
+final _defaultDecoders = [_PdfFlateImageDecoder(), _PdfAsciiHexImageDecoder()];
 
 class PdfImageProcessor {
   PdfImageProcessor(
@@ -31,7 +53,6 @@ class PdfImageProcessor {
   })  : _imageMap = Map.fromIterable(images, key: (e) => e.id),
         _decoders = decoders ?? _defaultDecoders;
 
-  final _equality = ListEquality();
   final List<PdfImageDecoder> _decoders;
   final Map<RawPdfImageId, RawPdfImage> _imageMap;
   final bool leaveMask;
@@ -57,19 +78,18 @@ class PdfImageProcessor {
       }).toList(growable: false);
     }
     final hasDctDecoder =
-        _decoders.any((e) => _equality.equals(e.key, [PdfImageFilterType.dct]));
+        _decoders.any((e) => e.canDecode([PdfImageFilterType.dct]));
     return maskedImages.map((e) {
-      if (!hasDctDecoder &&
-          _equality.equals(e.source.filter, [PdfImageFilterType.dct])) {
-        if (e.mask != null) {
+      final source = _decode(e.source);
+      final mask = e.mask == null ? null : _decode(e.mask!);
+      if (!hasDctDecoder && e.source.filter.contains(PdfImageFilterType.dct)) {
+        if (mask != null) {
           throw UnsupportedError(
             'DCT filter and mask were detected at the same time.',
           );
         }
-        return decodeJpg(Uint8List.fromList(e.source.bytes))!;
+        return decodeJpg(Uint8List.fromList(source))!;
       }
-      final source = _decode(e.source);
-      final mask = e.mask == null ? null : _decode(e.mask!);
       final int channels;
       final colorSpace = e.source.colorSpace;
       switch (colorSpace) {
@@ -139,7 +159,7 @@ class PdfImageProcessor {
 
   List<int> _decode(RawPdfImage image) {
     final result = _decoders
-        .firstWhereOrNull((e) => _equality.equals(e.key, image.filter))
+        .firstWhereOrNull((e) => e.canDecode(image.filter))
         ?.decode(image.bytes);
     if (result == null) {
       throw UnsupportedError('Unsupported filter. ${image.filter}');

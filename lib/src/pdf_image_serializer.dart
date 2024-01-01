@@ -85,7 +85,6 @@ class PdfImageSerializer {
         .toList(growable: false);
     final length = _extractNumber(_getList(parsed, '/Length').first);
     final stream = value.stream!;
-    assert(length == stream.length);
     return RawPdfImage(
       id: id,
       width: width,
