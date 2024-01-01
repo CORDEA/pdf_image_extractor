@@ -67,7 +67,7 @@ void main() {
           RawPdfImageId(objectNumber: 3, generationNumber: 4),
         );
         expect(result.bitsPerComponent, 5);
-        expect(result.filter, [RawPdfImageFilterType.flate]);
+        expect(result.filter, [PdfImageFilterType.flate]);
         expect(result.length, 6);
         expect(result.bytes, [0, 0, 0, 0, 0, 0]);
       });
@@ -129,7 +129,7 @@ void main() {
 
       expect(
         result.filter,
-        [RawPdfImageFilterType.asciiHex, RawPdfImageFilterType.lzw],
+        [PdfImageFilterType.asciiHex, PdfImageFilterType.lzw],
       );
     });
 

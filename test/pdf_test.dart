@@ -16,7 +16,7 @@ void main() {
       expect(image.width, 448);
       expect(image.height, 448);
       expect(image.bitsPerComponent, 8);
-      expect(image.filter, [RawPdfImageFilterType.flate]);
+      expect(image.filter, [PdfImageFilterType.flate]);
     }
     expect(rawImages[0].length, 15302);
     expect(
@@ -43,7 +43,7 @@ void main() {
       expect(image.width, 448);
       expect(image.height, 448);
       expect(image.bitsPerComponent, 8);
-      expect(image.filter, [RawPdfImageFilterType.flate]);
+      expect(image.filter, [PdfImageFilterType.flate]);
     }
     expect(rawImages[0].length, 12925);
     expect(

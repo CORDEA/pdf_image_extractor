@@ -6,7 +6,7 @@ class RawPdfImage {
   final int height;
   final int bitsPerComponent;
   final RawPdfImageColorSpace colorSpace;
-  final List<RawPdfImageFilterType> filter;
+  final List<PdfImageFilterType> filter;
   final int length;
   final RawPdfImageId? sMask;
   final List<int> bytes;
@@ -48,7 +48,7 @@ class RawPdfImageId {
       'RawPdfImageId(objectNumber: $objectNumber,  generationNumber: $generationNumber)';
 }
 
-enum RawPdfImageFilterType {
+enum PdfImageFilterType {
   asciiHex,
   ascii85,
   lzw,
@@ -60,7 +60,7 @@ enum RawPdfImageFilterType {
   jpx,
   crypt;
 
-  factory RawPdfImageFilterType.from(String value) {
+  factory PdfImageFilterType.from(String value) {
     return switch (value) {
       '/ASCIIHexDecode' => asciiHex,
       '/ASCII85Decode' => ascii85,

@@ -5,7 +5,7 @@ import 'package:image/image.dart';
 import 'package:pdf_image_extractor/src/raw_pdf_image.dart';
 
 abstract interface class PdfImageDecoder {
-  List<RawPdfImageFilterType> get key;
+  List<PdfImageFilterType> get key;
 
   List<int> decode(List<int> bytes);
 }
@@ -14,7 +14,7 @@ final class PdfFlateImageDecoder implements PdfImageDecoder {
   final _zlibDecoder = ZLibDecoder();
 
   @override
-  List<RawPdfImageFilterType> get key => [RawPdfImageFilterType.flate];
+  List<PdfImageFilterType> get key => [PdfImageFilterType.flate];
 
   @override
   List<int> decode(List<int> bytes) => _zlibDecoder.convert(bytes);

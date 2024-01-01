@@ -81,7 +81,7 @@ class PdfImageSerializer {
     final bitsPerComponent =
         _extractNumber(_getList(parsed, '/BitsPerComponent').first);
     final filter = _getList(parsed, '/Filter')
-        .map((e) => RawPdfImageFilterType.from(e))
+        .map((e) => PdfImageFilterType.from(e))
         .toList(growable: false);
     final length = _extractNumber(_getList(parsed, '/Length').first);
     final stream = value.stream!;
