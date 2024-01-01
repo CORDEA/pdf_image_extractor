@@ -161,7 +161,7 @@ class PdfTagParser {
               tag.value[key!] = subTag.tag;
               key = null;
             case PdfTagList():
-              throw UnimplementedError();
+              throw ArgumentError('Expected a dictionary but received a list.');
           }
           continue;
         }

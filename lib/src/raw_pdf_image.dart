@@ -72,7 +72,7 @@ enum PdfImageFilterType {
       '/DCTDecode' => dct,
       '/JPXDecode' => jpx,
       '/Crypt' => crypt,
-      String() => throw UnimplementedError(),
+      String() => throw ArgumentError('Unknown type. $value'),
     };
   }
 }

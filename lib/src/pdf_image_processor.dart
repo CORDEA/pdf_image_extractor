@@ -62,7 +62,9 @@ class PdfImageProcessor {
       if (!hasDctDecoder &&
           _equality.equals(e.source.filter, [PdfImageFilterType.dct])) {
         if (e.mask != null) {
-          throw UnimplementedError();
+          throw UnsupportedError(
+            'DCT filter and mask were detected at the same time.',
+          );
         }
         return decodeJpg(Uint8List.fromList(e.source.bytes))!;
       }
@@ -129,7 +131,7 @@ class PdfImageProcessor {
                 image.r = source[i];
               }
             default:
-              throw UnimplementedError();
+              throw ArgumentError('Invalid number of channels. $channels');
           }
         });
     }).toList(growable: false);
@@ -140,7 +142,7 @@ class PdfImageProcessor {
         .firstWhereOrNull((e) => _equality.equals(e.key, image.filter))
         ?.decode(image.bytes);
     if (result == null) {
-      throw UnimplementedError();
+      throw UnsupportedError('Unsupported filter. ${image.filter}');
     }
     return result;
   }

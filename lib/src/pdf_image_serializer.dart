@@ -23,7 +23,7 @@ class PdfImageSerializer {
   ) {
     final parsed = _parser.parse(value.lines);
     if (parsed is! PdfTagDictionary) {
-      throw UnimplementedError();
+      throw ArgumentError('Expected a dictionary but received a list.');
     }
     final width = _extractNumber(_getList(parsed, '/Width').first);
     final height = _extractNumber(_getList(parsed, '/Height').first);
@@ -59,10 +59,10 @@ class PdfImageSerializer {
               PdfImageColorModel.from(_getList(tag, '/Alternate').first),
             );
           default:
-            throw UnimplementedError();
+            throw UnsupportedError('Unsupported color space. ${ref.value}');
         }
       } else {
-        throw UnimplementedError();
+        throw ArgumentError('Expected a list but received a dictionary.');
       }
     } else {
       colorSpace =
