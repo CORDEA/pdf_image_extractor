@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
 import 'package:image/image.dart';
@@ -55,7 +56,16 @@ class PdfImageProcessor {
         );
       }).toList(growable: false);
     }
+    final hasDctDecoder =
+        _decoders.any((e) => _equality.equals(e.key, [PdfImageFilterType.dct]));
     return maskedImages.map((e) {
+      if (!hasDctDecoder &&
+          _equality.equals(e.source.filter, [PdfImageFilterType.dct])) {
+        if (e.mask != null) {
+          throw UnimplementedError();
+        }
+        return decodeJpg(Uint8List.fromList(e.source.bytes))!;
+      }
       final source = _decode(e.source);
       final mask = e.mask == null ? null : _decode(e.mask!);
       final int channels;
@@ -126,11 +136,12 @@ class PdfImageProcessor {
   }
 
   List<int> _decode(RawPdfImage image) {
-    final decoder = _decoders
-        .firstWhereOrNull((e) => _equality.equals(e.key, image.filter));
-    if (decoder == null) {
+    final result = _decoders
+        .firstWhereOrNull((e) => _equality.equals(e.key, image.filter))
+        ?.decode(image.bytes);
+    if (result == null) {
       throw UnimplementedError();
     }
-    return decoder.decode(image.bytes);
+    return result;
   }
 }
