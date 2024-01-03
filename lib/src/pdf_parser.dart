@@ -1,7 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
-import 'package:pdf_image_extractor/pdf_image_extractor.dart';
+
+import 'raw_pdf_image.dart';
 
 class PdfSplitter {
   static const _separators = [

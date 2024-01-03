@@ -3,7 +3,8 @@ import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
 import 'package:image/image.dart';
-import 'package:pdf_image_extractor/src/raw_pdf_image.dart';
+
+import 'raw_pdf_image.dart';
 
 abstract interface class PdfImageDecoder {
   bool canDecode(List<PdfImageFilterType> filter);

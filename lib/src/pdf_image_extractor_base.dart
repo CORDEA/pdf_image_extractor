@@ -2,9 +2,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
-import 'package:pdf_image_extractor/src/pdf_image_serializer.dart';
-import 'package:pdf_image_extractor/src/pdf_parser.dart';
-import 'package:pdf_image_extractor/src/raw_pdf_image.dart';
+
+import 'pdf_image_serializer.dart';
+import 'pdf_parser.dart';
+import 'raw_pdf_image.dart';
 
 class PdfImageExtractor {
   PdfImageExtractor(this.file);

@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:pdf_image_extractor/src/pdf_parser.dart';
-import 'package:pdf_image_extractor/src/raw_pdf_image.dart';
+import 'pdf_parser.dart';
+import 'raw_pdf_image.dart';
 
 class PdfImageSerializer {
   PdfImageSerializer(this._parser);
