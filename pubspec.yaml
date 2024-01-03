@@ -1,7 +1,7 @@
 name: pdf_image_extractor
-description: A starting point for Dart libraries or applications.
+description: A package to extract images from PDF.
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
+repository: https://github.com/CORDEA/pdf_image_extractor
 
 environment:
   sdk: ^3.2.3
